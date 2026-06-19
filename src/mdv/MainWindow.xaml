@@ -1,0 +1,209 @@
+<Window x:Class="mdv.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:mdv"
+        xmlns:conv="clr-namespace:mdv.Converters"
+        xmlns:markdig="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf"
+        Title="mdv" Height="700" Width="900"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <conv:LevelToMarginConverter x:Key="LevelToMargin" />
+    </Window.Resources>
+
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.Open" Executed="OnOpen" />
+        <CommandBinding Command="{x:Static local:MainWindow.CloseCommand}" Executed="OnCloseFile" CanExecute="OnCanCloseFile" />
+        <CommandBinding Command="{x:Static local:MainWindow.ExitCommand}" Executed="OnExit" />
+        <CommandBinding Command="{x:Static local:MainWindow.ReloadCommand}" Executed="OnReload" CanExecute="OnCanReload" />
+        <CommandBinding Command="{x:Static local:MainWindow.DistractionFreeCommand}" Executed="OnToggleDistractionFree" />
+        <CommandBinding Command="{x:Static local:MainWindow.FollowClaudeCommand}" Executed="OnToggleFollowClaude" />
+        <CommandBinding Command="ApplicationCommands.Find" Executed="OnFind" CanExecute="OnCanFind" />
+        <CommandBinding Command="{x:Static local:MainWindow.AboutCommand}" Executed="OnAbout" />
+        <CommandBinding Command="{x:Static markdig:Commands.Hyperlink}" Executed="OnHyperlink" />
+    </Window.CommandBindings>
+
+    <Window.InputBindings>
+        <KeyBinding Command="ApplicationCommands.Open" Key="O" Modifiers="Control" />
+        <KeyBinding Command="{x:Static local:MainWindow.CloseCommand}" Key="W" Modifiers="Control" />
+        <KeyBinding Command="{x:Static local:MainWindow.ExitCommand}" Key="Q" Modifiers="Control" />
+        <KeyBinding Command="{x:Static local:MainWindow.ReloadCommand}" Key="F5" />
+        <KeyBinding Command="{x:Static local:MainWindow.DistractionFreeCommand}" Key="F11" />
+        <KeyBinding Command="{x:Static local:MainWindow.FollowClaudeCommand}" Key="L" Modifiers="Control" />
+        <KeyBinding Command="ApplicationCommands.Find" Key="F" Modifiers="Control" />
+    </Window.InputBindings>
+
+    <DockPanel>
+        <Menu x:Name="MainMenu" DockPanel.Dock="Top">
+            <MenuItem x:Name="FileMenu" Header="_File">
+                <MenuItem Header="_Open..." Command="ApplicationCommands.Open" InputGestureText="Ctrl+O" />
+                <MenuItem Header="_Close" Command="{x:Static local:MainWindow.CloseCommand}" InputGestureText="Ctrl+W" />
+                <Separator x:Name="RecentSeparator" />
+                <!-- Recent-files (MRU) menu items are inserted here at run time. -->
+                <MenuItem x:Name="ExitMenuItem" Header="E_xit" Command="{x:Static local:MainWindow.ExitCommand}" InputGestureText="Ctrl+Q" />
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="_Reload"
+                          Command="{x:Static local:MainWindow.ReloadCommand}"
+                          InputGestureText="F5" />
+                <MenuItem Header="_Find..."
+                          Command="ApplicationCommands.Find"
+                          InputGestureText="Ctrl+F" />
+                <Separator />
+                <MenuItem x:Name="FollowClaudeMenuItem" Header="Follow _Claude Session"
+                          IsCheckable="True"
+                          Command="{x:Static local:MainWindow.FollowClaudeCommand}"
+                          InputGestureText="Ctrl+L" />
+                <MenuItem x:Name="DistractionFreeMenuItem" Header="_Distraction Free"
+                          IsCheckable="True"
+                          Command="{x:Static local:MainWindow.DistractionFreeCommand}"
+                          InputGestureText="F11" />
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About" Command="{x:Static local:MainWindow.AboutCommand}" />
+            </MenuItem>
+        </Menu>
+
+        <!-- Status bar: file path (left), file size and word count (right). Stays
+             visible in distraction-free mode; collapsed when no document is open.
+             Each field copies its value to the clipboard when clicked. -->
+        <Border x:Name="StatusBar"
+                DockPanel.Dock="Bottom"
+                Background="#FFF0F0F0"
+                BorderBrush="#FFE0E0E0"
+                BorderThickness="0,1,0,0"
+                Padding="8,3"
+                Visibility="Collapsed"
+                SizeChanged="OnStatusBarSizeChanged">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Displayed text is middle-truncated in code; ToolTip holds the full path. -->
+                <TextBlock x:Name="PathLabel"
+                           Grid.Column="0"
+                           VerticalAlignment="Center"
+                           Foreground="#FF444444"
+                           FontSize="12"
+                           Background="Transparent"
+                           Cursor="Hand"
+                           HorizontalAlignment="Left"
+                           TextWrapping="NoWrap"
+                           MouseLeftButtonUp="OnCopyPath"
+                           ToolTip="Click to copy the full path" />
+
+                <TextBlock x:Name="SizeLabel"
+                           Grid.Column="1"
+                           Margin="16,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="#FF444444"
+                           FontSize="12"
+                           Background="Transparent"
+                           Cursor="Hand"
+                           MouseLeftButtonUp="OnCopySize"
+                           ToolTip="File size — click to copy" />
+
+                <TextBlock x:Name="WordsLabel"
+                           Grid.Column="2"
+                           Margin="16,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="#FF444444"
+                           FontSize="12"
+                           Background="Transparent"
+                           Cursor="Hand"
+                           MouseLeftButtonUp="OnCopyWords"
+                           ToolTip="Word count — click to copy" />
+            </Grid>
+        </Border>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="SplitterColumn" Width="Auto" />
+                <ColumnDefinition x:Name="OutlineColumn" Width="220" MinWidth="120" />
+            </Grid.ColumnDefinitions>
+
+            <FlowDocumentScrollViewer x:Name="Viewer"
+                                      Grid.Column="0"
+                                      IsToolBarVisible="False"
+                                      IsSelectionEnabled="True"
+                                      VerticalScrollBarVisibility="Auto"
+                                      SizeChanged="OnViewerSizeChanged"
+                                      Background="White">
+                <!-- Instance binding overrides the viewer's built-in Find toolbar (a
+                     bottom-docked native bar) so our own find bar is used instead. -->
+                <FlowDocumentScrollViewer.CommandBindings>
+                    <CommandBinding Command="ApplicationCommands.Find" Executed="OnFind" CanExecute="OnCanFind" />
+                </FlowDocumentScrollViewer.CommandBindings>
+            </FlowDocumentScrollViewer>
+
+            <!-- Floating find bar: overlays the top-right of the document column. -->
+            <Border x:Name="FindBar"
+                    Grid.Column="0"
+                    Panel.ZIndex="10"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Right"
+                    Margin="0,8,16,0"
+                    Padding="6,4"
+                    Background="#FFF8F8F8"
+                    BorderBrush="#FFCCCCCC"
+                    BorderThickness="1"
+                    CornerRadius="3"
+                    Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="FindInput"
+                             Width="200"
+                             VerticalContentAlignment="Center"
+                             TextChanged="OnFindTextChanged" />
+                    <TextBlock x:Name="FindStatus"
+                               MinWidth="64"
+                               Margin="8,0"
+                               VerticalAlignment="Center"
+                               TextAlignment="Center"
+                               Foreground="#FF555555" />
+                    <Button x:Name="FindPrevButton" Content="&#x25B2;" Width="26" Margin="1,0"
+                            Click="OnFindPrevious" ToolTip="Previous match (Shift+Enter)" />
+                    <Button x:Name="FindNextButton" Content="&#x25BC;" Width="26" Margin="1,0"
+                            Click="OnFindNext" ToolTip="Next match (Enter)" />
+                    <Button x:Name="FindCloseButton" Content="&#x2715;" Width="26" Margin="1,0"
+                            Click="OnFindClose" ToolTip="Close (Esc)" />
+                </StackPanel>
+            </Border>
+
+            <GridSplitter x:Name="OutlineSplitter"
+                          Grid.Column="1"
+                          Width="4"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Stretch"
+                          Background="#FFE0E0E0" />
+
+            <ListBox x:Name="OutlineList"
+                     Grid.Column="2"
+                     BorderThickness="1,0,0,0"
+                     BorderBrush="#FFE0E0E0"
+                     Background="#FFFAFAFA"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     SelectionChanged="OnOutlineItemSelected">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Padding" Value="6,3" />
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Text}"
+                                   Margin="{Binding Level, Converter={StaticResource LevelToMargin}}"
+                                   TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding Text}"
+                                   FontFamily="Segoe UI"
+                                   FontSize="13" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </DockPanel>
+</Window>
