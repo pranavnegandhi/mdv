@@ -61,8 +61,13 @@ Claude Code  ──Stop hook──▶  %LOCALAPPDATA%\mdv\sessions\<project-slug
 
 ### 1. Install the `Stop` hook
 
-Save the hook script (`stop.ps1`) to `%USERPROFILE%\.claude\hooks\stop.ps1`, then
-register it in your Claude Code settings (`%USERPROFILE%\.claude\settings.json`):
+Copy the bundled [`hooks/stop.ps1`](hooks/stop.ps1) into your Claude Code hooks folder:
+
+```powershell
+Copy-Item hooks\stop.ps1 "$env:USERPROFILE\.claude\hooks\stop.ps1"
+```
+
+Then register it in your Claude Code settings (`%USERPROFILE%\.claude\settings.json`):
 
 ```json
 {
