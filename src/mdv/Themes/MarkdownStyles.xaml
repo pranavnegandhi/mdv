@@ -9,11 +9,17 @@
 
         Headings  -> Cambria (serif)
         Body/lists -> Segoe UI (sans-serif), inherited from the document style.
+
+        Each FontFamily lists "Segoe UI Emoji" as a trailing fallback. Cambria and
+        Segoe UI carry no emoji glyphs, and WPF's default text fallback only reaches
+        Segoe UI Symbol — which lacks emoji added after Unicode 6.x (e.g. 🟠 U+1F7E0),
+        rendering them as a missing-glyph "?". Naming Segoe UI Emoji explicitly lets
+        WPF resolve those newer codepoints. See issue #7.
     -->
 
     <!-- Overall document: sans-serif body font + comfortable reading metrics -->
     <Style x:Key="{x:Static markdig:Styles.DocumentStyleKey}" TargetType="{x:Type FlowDocument}">
-        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontFamily" Value="Segoe UI, Segoe UI Emoji" />
         <Setter Property="FontSize" Value="15" />
         <Setter Property="LineHeight" Value="22" />
         <Setter Property="PagePadding" Value="32,24,32,24" />
@@ -22,7 +28,7 @@
 
     <!-- Headings: serif (Cambria), bold, descending sizes -->
     <Style x:Key="{x:Static markdig:Styles.Heading1StyleKey}" TargetType="{x:Type Paragraph}">
-        <Setter Property="FontFamily" Value="Cambria" />
+        <Setter Property="FontFamily" Value="Cambria, Segoe UI Emoji" />
         <Setter Property="FontSize" Value="30" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="#FF1A1A1A" />
@@ -30,7 +36,7 @@
     </Style>
 
     <Style x:Key="{x:Static markdig:Styles.Heading2StyleKey}" TargetType="{x:Type Paragraph}">
-        <Setter Property="FontFamily" Value="Cambria" />
+        <Setter Property="FontFamily" Value="Cambria, Segoe UI Emoji" />
         <Setter Property="FontSize" Value="24" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="#FF1A1A1A" />
@@ -38,7 +44,7 @@
     </Style>
 
     <Style x:Key="{x:Static markdig:Styles.Heading3StyleKey}" TargetType="{x:Type Paragraph}">
-        <Setter Property="FontFamily" Value="Cambria" />
+        <Setter Property="FontFamily" Value="Cambria, Segoe UI Emoji" />
         <Setter Property="FontSize" Value="20" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="#FF1A1A1A" />
@@ -46,7 +52,7 @@
     </Style>
 
     <Style x:Key="{x:Static markdig:Styles.Heading4StyleKey}" TargetType="{x:Type Paragraph}">
-        <Setter Property="FontFamily" Value="Cambria" />
+        <Setter Property="FontFamily" Value="Cambria, Segoe UI Emoji" />
         <Setter Property="FontSize" Value="17" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="#FF1A1A1A" />
@@ -54,7 +60,7 @@
     </Style>
 
     <Style x:Key="{x:Static markdig:Styles.Heading5StyleKey}" TargetType="{x:Type Paragraph}">
-        <Setter Property="FontFamily" Value="Cambria" />
+        <Setter Property="FontFamily" Value="Cambria, Segoe UI Emoji" />
         <Setter Property="FontSize" Value="15" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="#FF1A1A1A" />
@@ -62,7 +68,7 @@
     </Style>
 
     <Style x:Key="{x:Static markdig:Styles.Heading6StyleKey}" TargetType="{x:Type Paragraph}">
-        <Setter Property="FontFamily" Value="Cambria" />
+        <Setter Property="FontFamily" Value="Cambria, Segoe UI Emoji" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="#FF555555" />
@@ -71,7 +77,7 @@
 
     <!-- Body paragraphs: explicit sans-serif (safety; also inherited from document) -->
     <Style x:Key="{x:Static markdig:Styles.ParagraphStyleKey}" TargetType="{x:Type Paragraph}">
-        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontFamily" Value="Segoe UI, Segoe UI Emoji" />
         <Setter Property="Margin" Value="0,0,0,10" />
     </Style>
 
