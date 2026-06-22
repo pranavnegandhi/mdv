@@ -199,7 +199,7 @@
                                    Margin="{Binding Level, Converter={StaticResource LevelToMargin}}"
                                    TextTrimming="CharacterEllipsis"
                                    ToolTip="{Binding Text}"
-                                   FontFamily="Segoe UI"
+                                   FontFamily="Segoe UI, Segoe UI Emoji"
                                    FontSize="13" />
                     </DataTemplate>
                 </ListBox.ItemTemplate>
