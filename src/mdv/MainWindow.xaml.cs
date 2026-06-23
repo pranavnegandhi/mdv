@@ -739,7 +739,7 @@ public partial class MainWindow : Window
             this,
             $"mdv {versionText}\n\n" +
             "A view-only Markdown reader for Windows.",
-            "About mdv",
+            "About",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
     }
