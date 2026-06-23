@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -47,6 +48,7 @@ public partial class MainWindow : Window
     // Live "Follow Claude" mode: a watcher over one project's session directory, the
     // flag tracking whether we are currently mirroring, and the project's display name.
     private ClaudeSessionWatcher? _sessionWatcher;
+
     private bool _following;
     private string? _followLabel;
 
@@ -57,6 +59,7 @@ public partial class MainWindow : Window
 
     // The MRU list (newest first) and the menu controls currently rendering it.
     private readonly List<string> _recentFiles = new();
+
     private readonly List<Control> _recentMenuItems = new();
 
     // Last width of the outline sidebar, remembered across collapses.
@@ -64,10 +67,12 @@ public partial class MainWindow : Window
 
     // Formatted status-bar values, retained so a click copies exactly what is shown.
     private string _sizeText = string.Empty;
+
     private string _wordsText = string.Empty;
 
     // Search state for the find bar. The index is rebuilt lazily per document.
     private DocumentSearch? _search;
+
     private IReadOnlyList<TextRange> _matches = Array.Empty<TextRange>();
     private int _matchIndex = -1;
     private TextRange? _highlighted;
@@ -727,12 +732,14 @@ public partial class MainWindow : Window
 
     private void OnAbout(object sender, ExecutedRoutedEventArgs e)
     {
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+        var versionText = version is null ? string.Empty : version.ToString(3);
+
         MessageBox.Show(
             this,
-            "mdv — Markdown Viewer\n\n" +
-            "A view-only Markdown reader for Windows.\n\n" +
-            "Powered by Markdig and Markdig.Wpf.",
-            "About mdv",
+            $"mdv {versionText}\n\n" +
+            "A view-only Markdown reader for Windows.",
+            "About",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
     }
