@@ -15,4 +15,9 @@
     <PackageReference Include="Markdig.Wpf" Version="0.5.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Ship third-party license notices alongside the binary (BSD-2-Clause / MIT attribution). -->
+    <None Include="..\..\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -738,8 +738,7 @@ public partial class MainWindow : Window
         MessageBox.Show(
             this,
             $"mdv {versionText}\n\n" +
-            "A view-only Markdown reader for Windows.\n\n" +
-            "Powered by Markdig and Markdig.Wpf.",
+            "A view-only Markdown reader for Windows.",
             "About mdv",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
