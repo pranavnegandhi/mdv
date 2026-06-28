@@ -29,7 +29,7 @@ public static class MarkdownDocumentLoader
             throw new FileNotFoundException("Markdown file not found.", path);
 
         var text = ReadAllTextShared(path);
-        var document = Markdig.Wpf.Markdown.ToFlowDocument(text, Pipeline);
+        var document = RenderToFlowDocument(text);
         document.IsHyphenationEnabled = false;
 
         // Markdig.Wpf has no base-URI hook, so a relative image src (e.g. docs/mdv.png) is
@@ -38,6 +38,27 @@ public static class MarkdownDocumentLoader
         // sources to the document's own directory so images render regardless of CWD.
         ResolveImageSources(document, Path.GetDirectoryName(Path.GetFullPath(path))!);
 
+        return document;
+    }
+
+    /// <summary>
+    /// Renders Markdown to a <see cref="FlowDocument"/> the same way
+    /// <c>Markdig.Wpf.Markdown.ToFlowDocument</c> does, but with one extra object renderer
+    /// registered: Markdig.Wpf has no <see cref="Markdig.Syntax.HtmlBlock"/> handler, so an
+    /// inline <c>&lt;svg&gt;</c> block is otherwise dropped during rendering. The renderer must be
+    /// added after <see cref="MarkdownPipeline.Setup(Markdig.Renderers.IMarkdownRenderer)"/>
+    /// (which loads the pipeline's renderers); a post-render document walk cannot recover the
+    /// block because the node never reaches the document.
+    /// </summary>
+    private static FlowDocument RenderToFlowDocument(string text)
+    {
+        var document = new FlowDocument();
+        var renderer = new Markdig.Renderers.WpfRenderer(document);
+        Pipeline.Setup(renderer);
+        renderer.ObjectRenderers.Add(new SvgHtmlBlockRenderer());
+
+        var parsed = Markdig.Markdown.Parse(text, Pipeline);
+        renderer.Render(parsed);
         return document;
     }
 

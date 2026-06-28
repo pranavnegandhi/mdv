@@ -7,12 +7,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Properties\mdv.ico</ApplicationIcon>
-    <Version>0.4.0.0</Version>
+    <Version>0.5.0.0</Version>
     <VersionSuffix>beta</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Markdig.Wpf" Version="0.5.0.1" />
+    <PackageReference Include="SharpVectors.Wpf" Version="1.8.5" />
   </ItemGroup>
 
   <ItemGroup>
