@@ -31,9 +31,6 @@ public partial class MainWindow : Window
     public static readonly RoutedUICommand DistractionFreeCommand =
         new("Distraction Free", nameof(DistractionFreeCommand), typeof(MainWindow));
 
-    public static readonly RoutedUICommand FollowClaudeCommand =
-        new("Follow Claude Session", nameof(FollowClaudeCommand), typeof(MainWindow));
-
     public static readonly RoutedUICommand AboutCommand =
         new("About", nameof(AboutCommand), typeof(MainWindow));
 
@@ -99,7 +96,14 @@ public partial class MainWindow : Window
     /// Loads, renders and displays the Markdown file at <paramref name="path"/>.
     /// Surfaces any failure as a message box rather than crashing.
     /// </summary>
-    public bool OpenFile(string path) => OpenFile(path, addToRecent: true, postProcess: null);
+    public bool OpenFile(string path)
+    {
+        // Opening a file is the only way to leave follow mode. Stop first so a watcher
+        // event already queued cannot reload the session over the file the user just opened.
+        // Live follow reloads bypass this by calling the private overload directly.
+        StopFollowing();
+        return OpenFile(path, addToRecent: true, postProcess: null);
+    }
 
     /// <summary>
     /// Core load path. <paramref name="addToRecent"/> is suppressed for live session
@@ -287,62 +291,59 @@ public partial class MainWindow : Window
     // ----- Follow Claude session ----------------------------------------------
 
     /// <summary>
-    /// Enables live-follow mode programmatically (e.g. from the <c>--follow</c> launch flag).
-    /// <paramref name="projectPath"/> selects which project's sessions to mirror; when null the
-    /// current working directory is used.
-    /// </summary>
-    public void EnableFollow(string? projectPath = null) => SetFollowing(true, projectPath);
-
-    private void OnToggleFollowClaude(object sender, ExecutedRoutedEventArgs e) =>
-        SetFollowing(!_following, null);
-
-    /// <summary>
-    /// Turns live mirroring on or off. While on, mdv watches one project's session folder
+    /// Enables live-follow mode (e.g. from the <c>--follow</c> launch flag). Follow mode is
+    /// launch-only: it starts here and ends only when the user opens a file (see
+    /// <see cref="StopFollowing"/>). While on, mdv watches one project's session folder
     /// (<c>%LOCALAPPDATA%\mdv\sessions\&lt;slug&gt;</c>) and reloads the newest session file as
-    /// each response is appended. The project is <paramref name="projectPath"/>, or the current
-    /// working directory when that is null.
+    /// each response is appended. <paramref name="projectPath"/> selects which project's
+    /// sessions to mirror; when null the current working directory is used.
     /// </summary>
-    private void SetFollowing(bool on, string? projectPath)
+    public void EnableFollow(string? projectPath = null)
     {
-        if (on == _following)
+        if (_following)
             return;
 
-        if (on)
-        {
-            var project = string.IsNullOrWhiteSpace(projectPath)
-                ? Environment.CurrentDirectory
-                : projectPath;
-            _followLabel = Path.GetFileName(project.TrimEnd('\\', '/'));
+        var project = string.IsNullOrWhiteSpace(projectPath)
+            ? Environment.CurrentDirectory
+            : projectPath;
+        _followLabel = Path.GetFileName(project.TrimEnd('\\', '/'));
 
-            _sessionWatcher = new ClaudeSessionWatcher(
-                Dispatcher, ClaudeSessionWatcher.ProjectDirectory(project));
-            _sessionWatcher.Changed += OnSessionChanged;
+        _sessionWatcher = new ClaudeSessionWatcher(
+            Dispatcher, ClaudeSessionWatcher.ProjectDirectory(project));
+        _sessionWatcher.Changed += OnSessionChanged;
 
-            var newest = _sessionWatcher.Start();
-            _following = true;
-            FollowClaudeMenuItem.IsChecked = true;
+        var newest = _sessionWatcher.Start();
+        _following = true;
 
-            // Jump to the foot of whatever already exists; new responses land below.
-            // If no session has been recorded for this project yet, show a waiting state
-            // until the first response arrives and the watcher fires.
-            if (newest is not null)
-                LoadFollowed(newest, forceBottom: true);
-            else
-                Title = $"Claude session [{_followLabel}] — mdv  ● following (waiting…)";
-        }
+        // Jump to the foot of whatever already exists; new responses land below.
+        // If no session has been recorded for this project yet, show a waiting state
+        // until the first response arrives and the watcher fires.
+        if (newest is not null)
+            LoadFollowed(newest, forceBottom: true);
         else
-        {
-            if (_sessionWatcher is not null)
-            {
-                _sessionWatcher.Changed -= OnSessionChanged;
-                _sessionWatcher.Dispose();
-                _sessionWatcher = null;
-            }
+            Title = $"Claude session [{_followLabel}] — mdv  ● following (waiting…)";
+    }
 
-            _following = false;
-            _followLabel = null;
-            FollowClaudeMenuItem.IsChecked = false;
+    /// <summary>
+    /// Leaves follow mode and returns to plain file viewing: detaches and disposes the
+    /// session watcher and clears the follow state. The opened file sets its own (normal)
+    /// title afterwards. A no-op when not following, so it is safe to call from every
+    /// file-open path.
+    /// </summary>
+    private void StopFollowing()
+    {
+        if (!_following)
+            return;
+
+        if (_sessionWatcher is not null)
+        {
+            _sessionWatcher.Changed -= OnSessionChanged;
+            _sessionWatcher.Dispose();
+            _sessionWatcher = null;
         }
+
+        _following = false;
+        _followLabel = null;
     }
 
     /// <summary>

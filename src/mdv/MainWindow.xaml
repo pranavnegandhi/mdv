@@ -17,7 +17,6 @@
         <CommandBinding Command="{x:Static local:MainWindow.ExitCommand}" Executed="OnExit" />
         <CommandBinding Command="{x:Static local:MainWindow.ReloadCommand}" Executed="OnReload" CanExecute="OnCanReload" />
         <CommandBinding Command="{x:Static local:MainWindow.DistractionFreeCommand}" Executed="OnToggleDistractionFree" />
-        <CommandBinding Command="{x:Static local:MainWindow.FollowClaudeCommand}" Executed="OnToggleFollowClaude" />
         <CommandBinding Command="ApplicationCommands.Find" Executed="OnFind" CanExecute="OnCanFind" />
         <CommandBinding Command="{x:Static local:MainWindow.AboutCommand}" Executed="OnAbout" />
         <CommandBinding Command="{x:Static markdig:Commands.Hyperlink}" Executed="OnHyperlink" />
@@ -29,7 +28,6 @@
         <KeyBinding Command="{x:Static local:MainWindow.ExitCommand}" Key="Q" Modifiers="Control" />
         <KeyBinding Command="{x:Static local:MainWindow.ReloadCommand}" Key="F5" />
         <KeyBinding Command="{x:Static local:MainWindow.DistractionFreeCommand}" Key="F11" />
-        <KeyBinding Command="{x:Static local:MainWindow.FollowClaudeCommand}" Key="L" Modifiers="Control" />
         <KeyBinding Command="ApplicationCommands.Find" Key="F" Modifiers="Control" />
     </Window.InputBindings>
 
@@ -50,10 +48,6 @@
                           Command="ApplicationCommands.Find"
                           InputGestureText="Ctrl+F" />
                 <Separator />
-                <MenuItem x:Name="FollowClaudeMenuItem" Header="Follow _Claude Session"
-                          IsCheckable="True"
-                          Command="{x:Static local:MainWindow.FollowClaudeCommand}"
-                          InputGestureText="Ctrl+L" />
                 <MenuItem x:Name="DistractionFreeMenuItem" Header="_Distraction Free"
                           IsCheckable="True"
                           Command="{x:Static local:MainWindow.DistractionFreeCommand}"
