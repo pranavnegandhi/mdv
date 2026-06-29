@@ -15,9 +15,10 @@
         <CommandBinding Command="ApplicationCommands.Open" Executed="OnOpen" />
         <CommandBinding Command="{x:Static local:MainWindow.CloseCommand}" Executed="OnCloseFile" CanExecute="OnCanCloseFile" />
         <CommandBinding Command="{x:Static local:MainWindow.ExitCommand}" Executed="OnExit" />
+        <CommandBinding Command="ApplicationCommands.Find" Executed="OnFind" CanExecute="OnCanFind" />
+        <CommandBinding Command="{x:Static local:MainWindow.AutoReloadCommand}" Executed="OnToggleAutoReload" />
         <CommandBinding Command="{x:Static local:MainWindow.ReloadCommand}" Executed="OnReload" CanExecute="OnCanReload" />
         <CommandBinding Command="{x:Static local:MainWindow.DistractionFreeCommand}" Executed="OnToggleDistractionFree" />
-        <CommandBinding Command="ApplicationCommands.Find" Executed="OnFind" CanExecute="OnCanFind" />
         <CommandBinding Command="{x:Static local:MainWindow.AboutCommand}" Executed="OnAbout" />
         <CommandBinding Command="{x:Static markdig:Commands.Hyperlink}" Executed="OnHyperlink" />
     </Window.CommandBindings>
@@ -26,9 +27,10 @@
         <KeyBinding Command="ApplicationCommands.Open" Key="O" Modifiers="Control" />
         <KeyBinding Command="{x:Static local:MainWindow.CloseCommand}" Key="W" Modifiers="Control" />
         <KeyBinding Command="{x:Static local:MainWindow.ExitCommand}" Key="Q" Modifiers="Control" />
+        <KeyBinding Command="ApplicationCommands.Find" Key="F" Modifiers="Control" />
+        <KeyBinding Command="{x:Static local:MainWindow.AutoReloadCommand}" Key="F6" />
         <KeyBinding Command="{x:Static local:MainWindow.ReloadCommand}" Key="F5" />
         <KeyBinding Command="{x:Static local:MainWindow.DistractionFreeCommand}" Key="F11" />
-        <KeyBinding Command="ApplicationCommands.Find" Key="F" Modifiers="Control" />
     </Window.InputBindings>
 
     <DockPanel>
@@ -41,13 +43,17 @@
                 <MenuItem x:Name="ExitMenuItem" Header="E_xit" Command="{x:Static local:MainWindow.ExitCommand}" InputGestureText="Ctrl+Q" />
             </MenuItem>
             <MenuItem Header="_View">
-                <MenuItem Header="_Reload"
-                          Command="{x:Static local:MainWindow.ReloadCommand}"
-                          InputGestureText="F5" />
                 <MenuItem Header="_Find..."
                           Command="ApplicationCommands.Find"
                           InputGestureText="Ctrl+F" />
                 <Separator />
+                <MenuItem x:Name="AutoReloadMenuItem" Header="_Auto-reload"
+                          IsCheckable="True"
+                          Command="{x:Static local:MainWindow.AutoReloadCommand}"
+                          InputGestureText="F6" />
+                <MenuItem Header="_Reload"
+                          Command="{x:Static local:MainWindow.ReloadCommand}"
+                          InputGestureText="F5" />
                 <MenuItem x:Name="DistractionFreeMenuItem" Header="_Distraction Free"
                           IsCheckable="True"
                           Command="{x:Static local:MainWindow.DistractionFreeCommand}"

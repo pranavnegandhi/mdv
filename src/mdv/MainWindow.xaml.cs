@@ -31,6 +31,9 @@ public partial class MainWindow : Window
     public static readonly RoutedUICommand DistractionFreeCommand =
         new("Distraction Free", nameof(DistractionFreeCommand), typeof(MainWindow));
 
+    public static readonly RoutedUICommand AutoReloadCommand =
+        new("Auto-reload", nameof(AutoReloadCommand), typeof(MainWindow));
+
     public static readonly RoutedUICommand AboutCommand =
         new("About", nameof(AboutCommand), typeof(MainWindow));
 
@@ -48,6 +51,13 @@ public partial class MainWindow : Window
 
     private bool _following;
     private string? _followLabel;
+
+    // Auto-reload: a watcher over the single open file's folder that reloads it in place when
+    // it changes on disk. Separate from follow mode (which has its own watcher) and only ever
+    // active for plainly-opened files, so the two never drive reloads at the same time.
+    private FileChangeWatcher? _autoReloadWatcher;
+    private string? _autoReloadPath;
+    private bool _autoReloadEnabled = true;
 
     private bool _distractionFree;
     private WindowStyle _savedWindowStyle;
@@ -88,6 +98,10 @@ public partial class MainWindow : Window
         _recentFiles.AddRange(RecentFilesService.Load());
         RefreshRecentFilesMenu();
 
+        // Reflect the current auto-reload state in its menu check (Task 8 wires this to the
+        // persisted preference; until then it follows the field's default).
+        AutoReloadMenuItem.IsChecked = _autoReloadEnabled;
+
         // No document is open at startup, so the outline starts collapsed.
         SetOutlineVisible(false);
     }
@@ -102,7 +116,14 @@ public partial class MainWindow : Window
         // event already queued cannot reload the session over the file the user just opened.
         // Live follow reloads bypass this by calling the private overload directly.
         StopFollowing();
-        return OpenFile(path, addToRecent: true, postProcess: null);
+        if (!OpenFile(path, addToRecent: true, postProcess: null))
+            return false;
+
+        // Point auto-reload at the file just opened (re-pointing here also moves the watch
+        // when the user opens a different file). Live follow reloads never reach this path,
+        // so follow mode and auto-reload never both drive reloads.
+        StartAutoReload(_currentPath!);
+        return true;
     }
 
     /// <summary>
@@ -174,8 +195,11 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        // Tear down both watchers deterministically so neither fires a reload against the
+        // window while it is closing.
         _sessionWatcher?.Dispose();
         _sessionWatcher = null;
+        StopAutoReload();
         base.OnClosed(e);
     }
 
@@ -211,6 +235,58 @@ public partial class MainWindow : Window
             DispatcherPriority.Loaded);
     }
 
+    // ----- Auto-reload ---------------------------------------------------------
+
+    /// <summary>
+    /// Points the auto-reload watcher at <paramref name="path"/>, watching its folder for a
+    /// change to that one file. A no-op when auto-reload is off (any existing watcher is torn
+    /// down), and a no-op when already watching this exact file so a reload does not churn the
+    /// watcher — which also means we never dispose the watcher from inside its own callback.
+    /// </summary>
+    private void StartAutoReload(string path)
+    {
+        if (!_autoReloadEnabled)
+        {
+            StopAutoReload();
+            return;
+        }
+
+        if (_autoReloadWatcher is not null &&
+            string.Equals(_autoReloadPath, path, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        StopAutoReload();
+
+        var dir = Path.GetDirectoryName(path);
+        if (dir is null)
+            return;
+
+        // The picker reports this exact file while it exists, else null. A null return means
+        // the watcher raises no Changed event, so a deleted/renamed-away file simply leaves
+        // the last good view in place rather than reloading or crashing.
+        _autoReloadWatcher = new FileChangeWatcher(
+            Dispatcher, dir, Path.GetFileName(path), () => File.Exists(path) ? path : null);
+        _autoReloadWatcher.Changed += OnWatchedFileChanged;
+        _autoReloadWatcher.Start();
+        _autoReloadPath = path;
+    }
+
+    /// <summary>Detaches and disposes the auto-reload watcher, if any.</summary>
+    private void StopAutoReload()
+    {
+        if (_autoReloadWatcher is not null)
+        {
+            _autoReloadWatcher.Changed -= OnWatchedFileChanged;
+            _autoReloadWatcher.Dispose();
+            _autoReloadWatcher = null;
+        }
+
+        _autoReloadPath = null;
+    }
+
+    /// <summary>The watched file changed on disk: reload it in place, keeping the scroll spot.</summary>
+    private void OnWatchedFileChanged(string path) => ReloadPreservingScroll(path);
+
     /// <summary>Finds the inner <see cref="ScrollViewer"/> within a control's template.</summary>
     private static ScrollViewer? FindScrollViewer(DependencyObject root)
     {
@@ -231,6 +307,38 @@ public partial class MainWindow : Window
     /// <summary>Toggles a borderless, full-screen, centered reading mode.</summary>
     private void OnToggleDistractionFree(object sender, ExecutedRoutedEventArgs e) =>
         SetDistractionFree(!_distractionFree);
+
+    /// <summary>Toggles auto-reload of the open file (View menu / F6).</summary>
+    private void OnToggleAutoReload(object sender, ExecutedRoutedEventArgs e) =>
+        SetAutoReload(!_autoReloadEnabled);
+
+    /// <summary>
+    /// Turns auto-reload on or off and syncs the menu check. Turning it on re-reads the open
+    /// file so the view catches up on any edits made while it was off, and begins watching it
+    /// for further changes; turning it off disposes the watcher. F5 is unaffected.
+    /// </summary>
+    private void SetAutoReload(bool on)
+    {
+        _autoReloadEnabled = on;
+        AutoReloadMenuItem.IsChecked = on;
+
+        // Follow mode runs its own watcher; the single-file watcher must not run alongside it.
+        // While following, just record the toggle — it takes effect when a file is next opened.
+        if (_following)
+            return;
+
+        if (on)
+        {
+            // Re-read now so the view reflects edits made while auto-reload was off. The reload
+            // goes through OpenFile, which also points the watcher at the file for new changes.
+            if (_currentPath is not null)
+                ReloadPreservingScroll(_currentPath);
+        }
+        else
+        {
+            StopAutoReload();
+        }
+    }
 
     private void SetDistractionFree(bool on)
     {
