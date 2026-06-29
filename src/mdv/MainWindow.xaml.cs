@@ -31,9 +31,6 @@ public partial class MainWindow : Window
     public static readonly RoutedUICommand DistractionFreeCommand =
         new("Distraction Free", nameof(DistractionFreeCommand), typeof(MainWindow));
 
-    public static readonly RoutedUICommand FollowClaudeCommand =
-        new("Follow Claude Session", nameof(FollowClaudeCommand), typeof(MainWindow));
-
     public static readonly RoutedUICommand AboutCommand =
         new("About", nameof(AboutCommand), typeof(MainWindow));
 
@@ -293,9 +290,6 @@ public partial class MainWindow : Window
     /// </summary>
     public void EnableFollow(string? projectPath = null) => SetFollowing(true, projectPath);
 
-    private void OnToggleFollowClaude(object sender, ExecutedRoutedEventArgs e) =>
-        SetFollowing(!_following, null);
-
     /// <summary>
     /// Turns live mirroring on or off. While on, mdv watches one project's session folder
     /// (<c>%LOCALAPPDATA%\mdv\sessions\&lt;slug&gt;</c>) and reloads the newest session file as
@@ -320,7 +314,6 @@ public partial class MainWindow : Window
 
             var newest = _sessionWatcher.Start();
             _following = true;
-            FollowClaudeMenuItem.IsChecked = true;
 
             // Jump to the foot of whatever already exists; new responses land below.
             // If no session has been recorded for this project yet, show a waiting state
@@ -341,7 +334,6 @@ public partial class MainWindow : Window
 
             _following = false;
             _followLabel = null;
-            FollowClaudeMenuItem.IsChecked = false;
         }
     }
 
