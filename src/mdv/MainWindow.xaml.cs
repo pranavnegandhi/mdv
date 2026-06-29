@@ -52,12 +52,16 @@ public partial class MainWindow : Window
     private bool _following;
     private string? _followLabel;
 
+    // Persisted runtime preferences, loaded once and saved when a setting changes.
+    private readonly Preferences _preferences = PreferencesService.Load();
+
     // Auto-reload: a watcher over the single open file's folder that reloads it in place when
     // it changes on disk. Separate from follow mode (which has its own watcher) and only ever
     // active for plainly-opened files, so the two never drive reloads at the same time.
+    // Initial enabled-state comes from the persisted preference (see the constructor).
     private FileChangeWatcher? _autoReloadWatcher;
     private string? _autoReloadPath;
-    private bool _autoReloadEnabled = true;
+    private bool _autoReloadEnabled;
 
     private bool _distractionFree;
     private WindowStyle _savedWindowStyle;
@@ -98,8 +102,8 @@ public partial class MainWindow : Window
         _recentFiles.AddRange(RecentFilesService.Load());
         RefreshRecentFilesMenu();
 
-        // Reflect the current auto-reload state in its menu check (Task 8 wires this to the
-        // persisted preference; until then it follows the field's default).
+        // Apply the persisted auto-reload preference and reflect it in the menu check.
+        _autoReloadEnabled = _preferences.AutoReload;
         AutoReloadMenuItem.IsChecked = _autoReloadEnabled;
 
         // No document is open at startup, so the outline starts collapsed.
@@ -321,6 +325,10 @@ public partial class MainWindow : Window
     {
         _autoReloadEnabled = on;
         AutoReloadMenuItem.IsChecked = on;
+
+        // Remember the choice across launches.
+        _preferences.AutoReload = on;
+        PreferencesService.Save(_preferences);
 
         // Follow mode runs its own watcher; the single-file watcher must not run alongside it.
         // While following, just record the toggle — it takes effect when a file is next opened.
