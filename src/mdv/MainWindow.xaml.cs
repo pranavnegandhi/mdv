@@ -44,7 +44,7 @@ public partial class MainWindow : Window
 
     // Live "Follow Claude" mode: a watcher over one project's session directory, the
     // flag tracking whether we are currently mirroring, and the project's display name.
-    private ClaudeSessionWatcher? _sessionWatcher;
+    private FileChangeWatcher? _sessionWatcher;
 
     private bool _following;
     private string? _followLabel;
@@ -308,8 +308,14 @@ public partial class MainWindow : Window
             : projectPath;
         _followLabel = Path.GetFileName(project.TrimEnd('\\', '/'));
 
-        _sessionWatcher = new ClaudeSessionWatcher(
-            Dispatcher, ClaudeSessionWatcher.ProjectDirectory(project));
+        // The session folder may not exist yet (no response recorded for this project);
+        // create it so the watcher has something to watch. The picker always reports the
+        // newest session file, so a newer session supersedes the current one.
+        var sessionDir = ClaudeSessions.ProjectDirectory(project);
+        Directory.CreateDirectory(sessionDir);
+
+        _sessionWatcher = new FileChangeWatcher(
+            Dispatcher, sessionDir, "*.md", () => ClaudeSessions.Newest(sessionDir));
         _sessionWatcher.Changed += OnSessionChanged;
 
         var newest = _sessionWatcher.Start();
