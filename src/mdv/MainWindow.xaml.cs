@@ -184,21 +184,25 @@ public partial class MainWindow : Window
         e.CanExecute = _currentPath is not null;
     }
 
-    /// <summary>
-    /// Re-reads the current file in place, preserving the scroll position. Because a
-    /// reload renders essentially the same content, the saved pixel offset maps back
-    /// to the same place; <see cref="ScrollViewer.ScrollToVerticalOffset"/> clamps it
-    /// if the document got shorter.
-    /// </summary>
+    /// <summary>Manual reload (F5): re-reads the current file in place, preserving scroll.</summary>
     private void OnReload(object sender, ExecutedRoutedEventArgs e)
     {
-        if (_currentPath is null)
-            return;
+        if (_currentPath is not null)
+            ReloadPreservingScroll(_currentPath);
+    }
 
+    /// <summary>
+    /// Re-reads <paramref name="path"/> in place, preserving the scroll position. Because a
+    /// reload renders essentially the same content, the saved pixel offset maps back to the
+    /// same place; <see cref="ScrollViewer.ScrollToVerticalOffset"/> clamps it if the document
+    /// got shorter. Shared by manual reload (F5) and auto-reload so both behave identically.
+    /// </summary>
+    private void ReloadPreservingScroll(string path)
+    {
         var scroller = FindScrollViewer(Viewer);
         var offset = scroller?.VerticalOffset ?? 0;
 
-        if (!OpenFile(_currentPath))
+        if (!OpenFile(path))
             return;
 
         // Restore once the new document has been laid out and its extent is known.
