@@ -21,4 +21,8 @@
     <None Include="..\..\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="Resources\digital_resource_lifespan.png" />
+  </ItemGroup>
+
 </Project>

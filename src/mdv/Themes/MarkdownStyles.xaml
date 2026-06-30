@@ -43,6 +43,19 @@
         <Setter Property="Margin" Value="0,14,0,8" />
     </Style>
 
+    <!--
+        Heading2 appearance for chrome TextBlocks (e.g. the comic-of-the-day title).
+        The Heading2 style above targets Paragraph (a FlowDocument element); WPF will not
+        apply a Paragraph-targeted style to a TextBlock, so this mirrors its visual values
+        for use outside the document. Keep the two in sync.
+    -->
+    <Style x:Key="Heading2TextStyle" TargetType="{x:Type TextBlock}">
+        <Setter Property="FontFamily" Value="Cambria, Segoe UI Emoji" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="#FF1A1A1A" />
+    </Style>
+
     <Style x:Key="{x:Static markdig:Styles.Heading3StyleKey}" TargetType="{x:Type Paragraph}">
         <Setter Property="FontFamily" Value="Cambria, Segoe UI Emoji" />
         <Setter Property="FontSize" Value="20" />

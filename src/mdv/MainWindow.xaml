@@ -140,6 +140,42 @@
                 </FlowDocumentScrollViewer.CommandBindings>
             </FlowDocumentScrollViewer>
 
+            <!-- Comic-of-the-day overlay: shown when no document is open.
+                 Layered above the viewer via Panel.ZIndex; auto-centers in all window states. -->
+            <StackPanel x:Name="ComicPanel"
+                        Grid.Column="0"
+                        Panel.ZIndex="5"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Orientation="Vertical"
+                        Visibility="Collapsed">
+
+                <!-- Title: uses the shared Heading2 appearance (MarkdownStyles.xaml) -->
+                <TextBlock x:Name="ComicTitle"
+                           Style="{StaticResource Heading2TextStyle}"
+                           Margin="0,0,0,12"
+                           Text="Loading today's xkcd…" />
+
+                <!-- Comic image; scales down to fit, never upscales; tooltip = alt text -->
+                <Image x:Name="ComicImage"
+                       HorizontalAlignment="Center"
+                       Stretch="Uniform"
+                       StretchDirection="DownOnly"
+                       MaxWidth="800"
+                       MaxHeight="560"
+                       Margin="0,0,0,10" />
+
+                <!-- Link to the comic page on xkcd.com -->
+                <TextBlock HorizontalAlignment="Center"
+                           FontFamily="Segoe UI, Segoe UI Emoji"
+                           FontSize="13">
+                    <Hyperlink x:Name="ComicLink"
+                               Command="{x:Static markdig:Commands.Hyperlink}">
+                        <Run x:Name="ComicLinkText" />
+                    </Hyperlink>
+                </TextBlock>
+            </StackPanel>
+
             <!-- Floating find bar: overlays the top-right of the document column. -->
             <Border x:Name="FindBar"
                     Grid.Column="0"

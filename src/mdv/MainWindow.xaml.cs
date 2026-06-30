@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using mdv.Services;
 using Microsoft.Win32;
@@ -88,6 +89,10 @@ public partial class MainWindow : Window
     private int _matchIndex = -1;
     private TextRange? _highlighted;
 
+    // Comic-of-the-day state: loaded once and reused when the user closes a document.
+    private XkcdComic? _loadedComic;
+    private BitmapImage? _loadedComicImage;
+
     private static SolidColorBrush CreateFrozenBrush(Color color)
     {
         var brush = new SolidColorBrush(color);
@@ -122,6 +127,9 @@ public partial class MainWindow : Window
         StopFollowing();
         if (!OpenFile(path, addToRecent: true, postProcess: null))
             return false;
+
+        // Hide the comic overlay now that a document is open.
+        ComicPanel.Visibility = Visibility.Collapsed;
 
         // Point auto-reload at the file just opened (re-pointing here also moves the watch
         // when the user opens a different file). Live follow reloads never reach this path,
@@ -188,6 +196,10 @@ public partial class MainWindow : Window
         UpdateStatusBar();
         CloseFindBar();
         ResetSearch();
+
+        // Re-show the comic panel with the already-loaded comic (no refetch).
+        if (_loadedComic is not null && _loadedComicImage is not null)
+            PopulateComicPanel(_loadedComic, _loadedComicImage);
     }
 
     private void OnCanCloseFile(object sender, CanExecuteRoutedEventArgs e)
@@ -865,7 +877,8 @@ public partial class MainWindow : Window
         MessageBox.Show(
             this,
             $"mdv {versionText}\n\n" +
-            "A view-only Markdown reader for Windows.",
+            "A view-only Markdown reader for Windows.\n\n" +
+            "Comics by Randall Munroe — xkcd.com, licensed under CC BY-NC 2.5.",
             "About",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
@@ -953,6 +966,83 @@ public partial class MainWindow : Window
         }
 
         OpenFile(path);
+    }
+
+    // ----- Comic of the day ---------------------------------------------------
+
+    /// <summary>
+    /// Loads and displays the xkcd comic of the day. Called from <see cref="App"/> on a
+    /// no-arg launch; also called indirectly when the user closes a document (re-shows the
+    /// already-cached comic without refetching). This method is fire-and-forget safe:
+    /// any exception is swallowed and the embedded fallback is shown instead.
+    /// </summary>
+    public async void ShowComicOfTheDay()
+    {
+        // Show the panel immediately with a loading placeholder; document must be null.
+        if (Viewer.Document is not null)
+            return;
+
+        ComicTitle.Text = "Loading today's xkcd…";
+        ComicImage.Source = null;
+        ComicImage.ToolTip = null;
+        ComicLink.CommandParameter = null;
+        ComicLinkText.Text = string.Empty;
+        ComicPanel.Visibility = Visibility.Visible;
+
+        XkcdComic? comic = null;
+        BitmapImage? image = null;
+
+        try
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            comic = await XkcdCache.GetForTodayAsync(today).ConfigureAwait(true);
+
+            if (comic is not null)
+            {
+                image = await Task.Run(() =>
+                {
+                    // ImageUrl for a cache hit is a local file path.
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.UriSource = new Uri(comic.ImageUrl, UriKind.Absolute);
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    return bitmap;
+                }).ConfigureAwait(true);
+            }
+        }
+        catch
+        {
+            // Fall through to the embedded fallback.
+        }
+
+        if (comic is null || image is null)
+        {
+            comic = XkcdFallback.Comic;
+            image = XkcdFallback.LoadImage();
+        }
+
+        _loadedComic = comic;
+        _loadedComicImage = image;
+
+        // Only populate if no document was opened while we were fetching.
+        if (Viewer.Document is null)
+            PopulateComicPanel(comic, image);
+    }
+
+    /// <summary>
+    /// Fills the comic panel with the given comic data and makes it visible.
+    /// Must be called on the UI thread.
+    /// </summary>
+    private void PopulateComicPanel(XkcdComic comic, BitmapImage image)
+    {
+        ComicTitle.Text = comic.Title;
+        ComicImage.Source = image;
+        ComicImage.ToolTip = comic.Alt;
+        ComicLink.CommandParameter = comic.PageUrl;
+        ComicLinkText.Text = comic.PageUrl;
+        ComicPanel.Visibility = Visibility.Visible;
     }
 
     private void ShowError(string message) =>
