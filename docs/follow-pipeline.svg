@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="270" viewBox="0 0 860 270" role="img" aria-label="Follow-mode pipeline: Claude Code's Stop hook appends each response to a per-project session Markdown file, which mdv --follow watches with a debounced FileSystemWatcher and live-renders.">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#57606a"/>
+    </marker>
+  </defs>
+  <rect x="0.5" y="0.5" width="859" height="269" rx="12" fill="#ffffff" stroke="#e1e4e8"/>
+  <rect x="30" y="42" width="140" height="56" rx="6" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5"/>
+  <text x="100" y="75" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#1f2328">Claude Code</text>
+  <line x1="170" y1="70" x2="296" y2="70" stroke="#57606a" stroke-width="1.75" marker-end="url(#arrow)"/>
+  <text x="233" y="60" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#57606a">Stop hook</text>
+  <rect x="300" y="34" width="530" height="72" rx="6" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5"/>
+  <text x="565" y="66" text-anchor="middle" font-family="sans-serif" font-size="12.5" fill="#1f2328">%LOCALAPPDATA%\mdv\sessions\</text>
+  <text x="565" y="88" text-anchor="middle" font-family="sans-serif" font-size="12.5" fill="#1f2328">&lt;project-slug&gt;\&lt;session-id&gt;.md</text>
+  <line x1="565" y1="106" x2="565" y2="180" stroke="#57606a" stroke-width="1.75" marker-end="url(#arrow)"/>
+  <text x="582" y="147" text-anchor="start" font-family="sans-serif" font-size="12" fill="#57606a">FileSystemWatcher (debounced)</text>
+  <rect x="495" y="182" width="140" height="56" rx="6" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5"/>
+  <text x="565" y="215" text-anchor="middle" font-family="sans-serif" font-size="12.5" fill="#1f2328">mdv --follow</text>
+  <line x1="635" y1="210" x2="700" y2="210" stroke="#57606a" stroke-width="1.75" marker-end="url(#arrow)"/>
+  <rect x="702" y="182" width="126" height="56" rx="6" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5"/>
+  <text x="765" y="215" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#1f2328">live render</text>
+</svg>
