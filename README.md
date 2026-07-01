@@ -14,6 +14,8 @@ displaying the conversation as it happened.*
 
 It works just as well as a plain, fast, general-purpose Markdown reader.
 
+![mdv rendering the GitHub Flavored Markdown specification, with the document outline on the right](docs/screenshot-gfm.png)
+
 ---
 
 ## Features
@@ -38,20 +40,20 @@ It works just as well as a plain, fast, general-purpose Markdown reader.
 - Responses are tagged with chat-style timestamps.
 - Sessions are bucketed **per project**, so each window follows one project in isolation.
 
+### Comic of the day
+
+Launch `mdv` with no file and the empty window becomes an [xkcd](https://xkcd.com)
+comic of the day and a link back to xkcd. Comics by Randall Munroe, licensed under CC BY-NC 2.5.
+
+![mdv's comic-of-the-day view showing the built-in offline comic](docs/screenshot-comic.png)
+
 ---
 
 ## Follow a Claude Code session
 
 Follow mode is a small, self-contained pipeline:
 
-```
-Claude Code  ──Stop hook──▶  %LOCALAPPDATA%\mdv\sessions\<project-slug>\<session-id>.md
-                                              │
-                                   FileSystemWatcher (debounced)
-                                              │
-                                              ▼
-                                  mdv --follow  ──▶  live render
-```
+![Follow-mode pipeline: Claude Code's Stop hook appends each response to a per-project session Markdown file, which mdv --follow watches with a debounced FileSystemWatcher and live-renders](docs/follow-pipeline.svg)
 
 1. A Claude Code **`Stop` hook** fires when each response completes. It pulls the
    visible response text out of the session transcript and *appends* it to a
