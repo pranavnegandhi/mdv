@@ -45,6 +45,10 @@ public partial class App : Application
             }
 
             window.Show();
+
+            // No file argument: fill the empty window with the comic of the day.
+            if (fileArg is null)
+                window.ShowComicOfTheDay();
         }
     }
 }

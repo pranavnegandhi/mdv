@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Properties\mdv.ico</ApplicationIcon>
-    <Version>0.7.0.0</Version>
+    <Version>0.8.0.0</Version>
     <VersionSuffix>beta</VersionSuffix>
   </PropertyGroup>
 
@@ -19,6 +19,10 @@
   <ItemGroup>
     <None Include="..\..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\digital_resource_lifespan.png" />
   </ItemGroup>
 
 </Project>

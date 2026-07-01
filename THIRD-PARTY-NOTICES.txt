@@ -95,3 +95,31 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+--------------------------------------------------------------------------------
+
+xkcd (comic content)
+https://xkcd.com
+Comics by Randall Munroe.
+
+License: Creative Commons Attribution-NonCommercial 2.5 Generic (CC BY-NC 2.5)
+Full legal code: https://creativecommons.org/licenses/by-nc/2.5/legalcode
+
+DEED SUMMARY
+
+You are free to:
+  Share — copy and redistribute the material in any medium or format.
+  Adapt — remix, transform, and build upon the material.
+
+Under the following terms:
+  Attribution — You must give appropriate credit, provide a link to the license,
+    and indicate if changes were made. You may do so in any reasonable manner,
+    but not in any way that suggests the licensor endorses you or your use.
+  NonCommercial — You may not use the material for commercial purposes.
+
+The above is a human-readable summary only. The full legal text governs in all
+cases; see the link above for the complete license.
+
+Note: this binary bundles xkcd #1909 ("Digital Resource Lifespan") as the
+embedded offline fallback comic. It is redistributed under the same CC BY-NC 2.5
+terms stated above.
