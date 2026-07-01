@@ -5,14 +5,22 @@ namespace mdv.Services;
 
 /// <summary>
 /// Minimal HTTP client for the xkcd JSON API and image downloads.
-/// Uses a single shared <see cref="HttpClient"/> with a ~10 s timeout.
+/// Uses a single shared <see cref="HttpClient"/> with a ~25 s timeout.
 /// All methods throw on failure; callers are expected to catch and handle errors.
 /// </summary>
+/// <remarks>
+/// The timeout is deliberately generous: the image host (<c>imgs.xkcd.com</c>) is a
+/// dual-stack CDN, and on networks where its IPv6 route is unreachable the connection
+/// attempt falls back to IPv4 only after the OS TCP connect timeout (~21 s). A shorter
+/// budget would abandon a perfectly reachable host mid-fallback. A genuinely offline
+/// machine still fails fast (the connection is refused immediately), so this longer
+/// timeout does not slow down the offline path.
+/// </remarks>
 public static class XkcdClient
 {
     private static readonly HttpClient Http = new()
     {
-        Timeout = TimeSpan.FromSeconds(10),
+        Timeout = TimeSpan.FromSeconds(25),
     };
 
     /// <summary>Fetches the latest comic number from <c>https://xkcd.com/info.0.json</c>.</summary>

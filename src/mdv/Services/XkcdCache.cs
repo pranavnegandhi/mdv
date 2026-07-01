@@ -53,7 +53,19 @@ public static class XkcdCache
 
             var id = XkcdComicSelector.Select(today, latest);
             var comic = await XkcdClient.GetComicAsync(id).ConfigureAwait(false);
-            var imageBytes = await XkcdClient.DownloadImageAsync(comic.ImageUrl).ConfigureAwait(false);
+
+            // The image host is a flaky dual-stack CDN (see XkcdClient); a first attempt can
+            // stall out on an unreachable IPv6 route, so retry once before giving up. A second
+            // failure falls through to the outer catch and the embedded fallback comic.
+            byte[] imageBytes;
+            try
+            {
+                imageBytes = await XkcdClient.DownloadImageAsync(comic.ImageUrl).ConfigureAwait(false);
+            }
+            catch
+            {
+                imageBytes = await XkcdClient.DownloadImageAsync(comic.ImageUrl).ConfigureAwait(false);
+            }
 
             // Derive the local image filename from the remote URL's extension.
             var ext = Path.GetExtension(comic.ImageUrl);
