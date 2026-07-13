@@ -1,4 +1,5 @@
 using System.IO;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media.Imaging;
@@ -31,6 +32,9 @@ public static class MarkdownDocumentLoader
         var text = ReadAllTextShared(path);
         var document = RenderToFlowDocument(text);
         document.IsHyphenationEnabled = false;
+
+        // Balance the text inside table cells vertically. See NormalizeTableCells.
+        NormalizeTableCells(document);
 
         // Markdig.Wpf has no base-URI hook, so a relative image src (e.g. docs/mdv.png) is
         // left for WPF to resolve against the process's current working directory — blank
@@ -130,6 +134,55 @@ public static class MarkdownDocumentLoader
         bitmap.EndInit();
         bitmap.Freeze();
         return bitmap;
+    }
+
+    /// <summary>
+    /// Removes the bottom margin from every paragraph inside a table cell.
+    /// </summary>
+    /// <remarks>
+    /// Markdig.Wpf renders each cell's text as a <see cref="Paragraph"/>, which inherits the
+    /// shared <c>ParagraphStyleKey</c> style — including its 10px bottom margin. Inside a cell
+    /// that margin is dead space at the bottom, so the text is pushed up and hugs the top (a
+    /// WPF <see cref="TableCell"/> cannot vertically centre its content). Zeroing the margin
+    /// lets the cell's symmetric <c>Padding</c> (see <c>MarkdownStyles.xaml</c>) balance the
+    /// text top-to-bottom. See issue #24.
+    /// </remarks>
+    private static void NormalizeTableCells(FlowDocument document)
+    {
+        foreach (var table in FindTables(document.Blocks))
+            foreach (var group in table.RowGroups)
+                foreach (var row in group.Rows)
+                    foreach (var cell in row.Cells)
+                        foreach (var paragraph in cell.Blocks.OfType<Paragraph>())
+                            paragraph.Margin = new Thickness(0);
+    }
+
+    /// <summary>
+    /// Walks the document's block tree and yields every <see cref="Table"/>, including tables
+    /// nested inside another table's cells, lists, or sections (blockquotes).
+    /// </summary>
+    private static IEnumerable<Table> FindTables(IEnumerable<Block> blocks)
+    {
+        foreach (var block in blocks)
+        {
+            switch (block)
+            {
+                case Table table:
+                    yield return table;
+                    foreach (var group in table.RowGroups)
+                        foreach (var row in group.Rows)
+                            foreach (var cell in row.Cells)
+                                foreach (var t in FindTables(cell.Blocks)) yield return t;
+                    break;
+                case Section section:
+                    foreach (var t in FindTables(section.Blocks)) yield return t;
+                    break;
+                case List list:
+                    foreach (var item in list.ListItems)
+                        foreach (var t in FindTables(item.Blocks)) yield return t;
+                    break;
+            }
+        }
     }
 
     // Markdig.Wpf hosts each Markdown image in an InlineUIContainer. WPF's LogicalTreeHelper

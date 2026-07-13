@@ -16,6 +16,19 @@ The one place alignment works is **pipe-table column alignment**, which maps to 
 | a longer cell | a longer cell   | a longer cell |
 | 1             | 22              | 333           |
 
+### Cell padding
+
+Cells have even padding on all four sides: left and right are identical, and match the
+top/bottom gap, so text is never jammed against the borders. Left-aligned text stops the
+same distance from the left border as right-aligned text does from the right, and wrapped
+text keeps its padding on every line.
+
+| Item                                                 | Size   |        Action |
+|:-----------------------------------------------------|:-------|--------------:|
+| Report Q1.pdf                                        | 1.2 MB | [🗑 Delete](#) |
+| Budget.xlsx                                          | 480 KB | [🗑 Delete](#) |
+| Longer text wraps neatly and still keeps its padding | 3 KB   | [🗑 Delete](#) |
+
 ### Aligning an image with a table cell
 
 Because cell content honors `TextAlignment`, dropping an image into a centered or
