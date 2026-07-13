@@ -94,4 +94,22 @@
         <Setter Property="Margin" Value="0,0,0,10" />
     </Style>
 
+    <!--
+        Table cells. Markdig.Wpf ships no default cell padding, so text renders flush
+        against the borders. We add uniform padding on all four sides: left and right are
+        identical, and match the top/bottom gap so the content sits evenly inside the cell.
+
+        Overriding this key replaces Markdig.Wpf's whole default cell style, so the grid
+        borders (BorderBrush/BorderThickness) are re-declared here to keep them.
+
+        Vertical balance also needs the shared ParagraphStyleKey's 10px bottom margin removed
+        from cell paragraphs; that is done in the post-render walk in MarkdownDocumentLoader
+        (a WPF TableCell cannot vertically centre its own content). See issue #24.
+    -->
+    <Style x:Key="{x:Static markdig:Styles.TableCellStyleKey}" TargetType="{x:Type TableCell}">
+        <Setter Property="BorderBrush" Value="Black" />
+        <Setter Property="BorderThickness" Value="1,1,0,0" />
+        <Setter Property="Padding" Value="6" />
+    </Style>
+
 </ResourceDictionary>
