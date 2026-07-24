@@ -1,0 +1,46 @@
+name: Release
+
+# Build and publish a downloadable binary when a version tag is pushed.
+# Example:  git tag v0.8.2 && git push origin v0.8.2
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # needed to create the GitHub Release and upload the asset
+
+jobs:
+  build:
+    runs-on: windows-latest # WPF app targets net10.0-windows, so a Windows runner is required
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore src/mdv/mdv.csproj
+
+      # Publishes using the existing FolderProfile.pubxml so its settings stay the
+      # single source of truth (Release, win-x64, framework-dependent, ReadyToRun).
+      # -o overrides only the output folder so later steps know where the files are.
+      - name: Publish
+        run: >
+          dotnet publish src/mdv/mdv.csproj
+          -p:PublishProfile=FolderProfile
+          -o publish/mdv
+
+      - name: Package into a zip
+        shell: pwsh
+        run: Compress-Archive -Path publish/mdv/* -DestinationPath mdv-${{ github.ref_name }}-win-x64.zip
+
+      - name: Create GitHub Release and upload the zip
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create ${{ github.ref_name }} mdv-${{ github.ref_name }}-win-x64.zip --title ${{ github.ref_name }} --generate-notes
