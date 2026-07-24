@@ -26,13 +26,18 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore src/mdv/mdv.csproj
 
-      # Publishes using the existing FolderProfile.pubxml so its settings stay the
-      # single source of truth (Release, win-x64, framework-dependent, ReadyToRun).
-      # -o overrides only the output folder so later steps know where the files are.
+      # Settings copied from Properties/PublishProfiles/FolderProfile.pubxml.
+      # The profile is gitignored (*.pubxml), so it is not on the runner — the
+      # values are inlined here instead: Release, win-x64, framework-dependent,
+      # ReadyToRun. -o sets the output folder so later steps know where to look.
       - name: Publish
         run: >
           dotnet publish src/mdv/mdv.csproj
-          -p:PublishProfile=FolderProfile
+          -c Release
+          -r win-x64
+          --self-contained false
+          -p:PublishReadyToRun=true
+          -p:PublishSingleFile=false
           -o publish/mdv
 
       - name: Package into a zip
