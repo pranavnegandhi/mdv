@@ -7,13 +7,19 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Properties\mdv.ico</ApplicationIcon>
-    <Version>0.8.1.0</Version>
+    <Version>0.8.2.0</Version>
     <VersionSuffix>beta</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Markdig.Wpf" Version="0.5.0.1" />
     <PackageReference Include="SharpVectors.Wpf" Version="1.8.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Exposes internal types (SvgBlock, SvgBlockParser, SvgExtension) to the test project
+         so the parse layer can be unit-tested without widening the public API. -->
+    <InternalsVisibleTo Include="mdv.Tests" />
   </ItemGroup>
 
   <ItemGroup>

@@ -7,26 +7,23 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using Markdig.Renderers;
 using Markdig.Renderers.Wpf;
-using Markdig.Syntax;
 using SharpVectors.Converters;
 using SharpVectors.Renderers.Wpf;
 
 namespace mdv.Services;
 
 /// <summary>
-/// Renders a block-level inline <c>&lt;svg&gt;…&lt;/svg&gt;</c> (which Markdig parses into an
-/// <see cref="HtmlBlock"/>) into the <see cref="FlowDocument"/>. Markdig.Wpf's renderer
-/// registers no <see cref="HtmlBlock"/> handler at all, so without this every SVG block is
-/// silently dropped; registering this renderer is the documented interception point.
+/// Renders an <see cref="SvgBlock"/> (a complete inline <c>&lt;svg&gt;…&lt;/svg&gt;</c> captured by
+/// <see cref="SvgBlockParser"/>) into the <see cref="FlowDocument"/>. Markdig.Wpf ships no
+/// renderer for SVG at all, so without this the block is silently dropped.
 /// </summary>
 /// <remarks>
-/// The SVG is rasterised to WPF visuals with SharpVectors (in-memory, from the raw block
-/// text) and hosted in a <see cref="BlockUIContainer"/>. Only <see cref="HtmlBlock"/>s that
-/// actually look like SVG are handled; every other raw-HTML block is left untouched, so
-/// non-SVG HTML stays dropped exactly as it is today. A block that fails to render degrades
-/// to a quiet inline placeholder rather than aborting the whole document render.
+/// The SVG is rasterised to WPF visuals with SharpVectors (in-memory, from the block's verbatim
+/// markup) and hosted in a <see cref="BlockUIContainer"/>. The parser guarantees the block is a
+/// whole SVG, so no content sniffing is needed here. A block that fails to render degrades to a
+/// quiet placeholder rather than aborting the whole document render.
 /// </remarks>
-internal sealed class SvgHtmlBlockRenderer : WpfObjectRenderer<HtmlBlock>
+internal sealed class SvgBlockRenderer : WpfObjectRenderer<SvgBlock>
 {
     private static readonly Regex ViewBoxPattern = new(
         @"viewBox\s*=\s*[""']\s*(?<v>[^""']+?)\s*[""']",
@@ -40,17 +37,12 @@ internal sealed class SvgHtmlBlockRenderer : WpfObjectRenderer<HtmlBlock>
         @"\bheight\s*=\s*[""']\s*(?<n>[\d.]+)",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    protected override void Write(WpfRenderer renderer, HtmlBlock obj)
+    protected override void Write(WpfRenderer renderer, SvgBlock obj)
     {
         if (renderer is null) throw new ArgumentNullException(nameof(renderer));
         if (obj is null) throw new ArgumentNullException(nameof(obj));
 
-        var markup = GetRawText(obj);
-
-        // Only handle blocks that are actually SVG; leave all other raw HTML alone (it stays
-        // dropped, as before). This keeps the change narrowly scoped to the feature.
-        if (!IsSvg(markup))
-            return;
+        var markup = obj.GetMarkup();
 
         try
         {
@@ -61,32 +53,6 @@ internal sealed class SvgHtmlBlockRenderer : WpfObjectRenderer<HtmlBlock>
             // One malformed diagram must never blank the rest of the document.
             renderer.WriteBlock(BuildPlaceholder());
         }
-    }
-
-    /// <summary>
-    /// Reassembles the block's verbatim source. Markdig keeps the raw lines on
-    /// <see cref="LeafBlock.Lines"/> because HTML parsing is enabled (the pipeline never
-    /// calls <c>DisableHtml()</c>).
-    /// </summary>
-    private static string GetRawText(HtmlBlock obj)
-    {
-        var lines = obj.Lines.Lines;
-        if (lines is null)
-            return string.Empty;
-
-        var builder = new System.Text.StringBuilder();
-        // StringLineGroup over-allocates its backing array; Count is the live line count.
-        for (var i = 0; i < obj.Lines.Count; i++)
-            builder.AppendLine(lines[i].Slice.ToString());
-
-        return builder.ToString();
-    }
-
-    private static bool IsSvg(string markup)
-    {
-        var trimmed = markup.AsSpan().TrimStart();
-        return trimmed.StartsWith("<svg", StringComparison.OrdinalIgnoreCase)
-            && markup.Contains("</svg", StringComparison.OrdinalIgnoreCase);
     }
 
     private static BlockUIContainer BuildSvgBlock(string markup)
