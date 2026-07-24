@@ -15,10 +15,11 @@ namespace mdv.Services;
 /// </summary>
 public static class MarkdownDocumentLoader
 {
-    // All supported Markdig.Wpf extensions: emphasis extras, pipe/grid tables,
-    // task lists, auto-links, etc. Built once and reused.
+    // All supported Markdig.Wpf extensions (emphasis extras, pipe/grid tables, task lists,
+    // auto-links, etc.) plus SvgExtension, which recognizes inline <svg> at the parse layer and
+    // registers its WPF renderer. Built once and reused.
     private static readonly MarkdownPipeline Pipeline =
-        new MarkdownPipelineBuilder().UseSupportedExtensions().Build();
+        new MarkdownPipelineBuilder().UseSupportedExtensions().Use(new SvgExtension()).Build();
 
     /// <summary>
     /// Reads <paramref name="path"/> and renders it to a <see cref="FlowDocument"/>.
@@ -47,19 +48,16 @@ public static class MarkdownDocumentLoader
 
     /// <summary>
     /// Renders Markdown to a <see cref="FlowDocument"/> the same way
-    /// <c>Markdig.Wpf.Markdown.ToFlowDocument</c> does, but with one extra object renderer
-    /// registered: Markdig.Wpf has no <see cref="Markdig.Syntax.HtmlBlock"/> handler, so an
-    /// inline <c>&lt;svg&gt;</c> block is otherwise dropped during rendering. The renderer must be
-    /// added after <see cref="MarkdownPipeline.Setup(Markdig.Renderers.IMarkdownRenderer)"/>
-    /// (which loads the pipeline's renderers); a post-render document walk cannot recover the
-    /// block because the node never reaches the document.
+    /// <c>Markdig.Wpf.Markdown.ToFlowDocument</c> does. <see cref="SvgExtension"/> (installed on
+    /// <see cref="Pipeline"/>) registers the SVG block parser and its WPF renderer during
+    /// <see cref="MarkdownPipeline.Setup(Markdig.Renderers.IMarkdownRenderer)"/>, so inline
+    /// <c>&lt;svg&gt;</c> is handled without any manual renderer wiring here.
     /// </summary>
     private static FlowDocument RenderToFlowDocument(string text)
     {
         var document = new FlowDocument();
         var renderer = new Markdig.Renderers.WpfRenderer(document);
         Pipeline.Setup(renderer);
-        renderer.ObjectRenderers.Add(new SvgHtmlBlockRenderer());
 
         var parsed = Markdig.Markdown.Parse(text, Pipeline);
         renderer.Render(parsed);
