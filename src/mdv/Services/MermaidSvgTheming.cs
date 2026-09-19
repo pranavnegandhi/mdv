@@ -31,13 +31,28 @@ internal static class MermaidSvgTheming
         @"--[\w-]+\s*:\s*[^;""'<>]+;",
         RegexOptions.Compiled);
 
+    // Unlike DeclarationPattern (which only ever strips a properly `;`-terminated declaration),
+    // this capture pattern must also see declarations with no trailing `;` — e.g. the last
+    // declaration in a `style="--bg:#FFFFFF;--fg:#27272A;--accent:#3b82f6"` attribute, which
+    // Mermaider emits with no trailing `;` after its final custom property. The lookahead accepts
+    // `;`, a closing quote, `}`, or end-of-string as the terminator so that last declaration is
+    // still captured into the name→value lookup, even though it's deliberately left unstripped by
+    // DeclarationPattern below.
     private static readonly Regex DeclarationCapturePattern = new(
-        @"--([\w-]+)\s*:\s*([^;""'<>]+);",
+        @"--([\w-]+)\s*:\s*([^;""'<>{}]+?)\s*(?=[;""'}]|$)",
         RegexOptions.Compiled);
 
     private static readonly Regex ColorMixPattern = new(
         @"color-mix\(\s*in\s+srgb\s*,\s*(#[0-9A-Fa-f]{6})\s+(\d+(?:\.\d+)?)%\s*,\s*(#[0-9A-Fa-f]{6})\s*\)",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    // Mermaider's `--fs-*` variables (e.g. `--fs-m: 1rem`) are authored against a 16px CSS root
+    // font size. SharpVectors.Wpf 1.8.5 doesn't understand the `rem` unit at all — it strips the
+    // suffix and uses the bare number as the literal font size, rendering every glyph at ~1px.
+    // This converts any resolved `<number>rem` value to its equivalent pixel number (unitless, as
+    // SharpVectors expects) so text actually renders at a legible size.
+    private static readonly Regex RemPattern = new(
+        @"(?<=[""'\s:])(\d+(?:\.\d+)?)rem", RegexOptions.Compiled);
 
     /// <summary>
     /// Resolves every <c>var()</c> reference and <c>color-mix()</c> call in <paramref name="svg"/>
@@ -62,7 +77,11 @@ internal static class MermaidSvgTheming
             text = afterColorMix;
         }
 
-        return DeclarationPattern.Replace(text, string.Empty);
+        text = DeclarationPattern.Replace(text, string.Empty);
+
+        return RemPattern.Replace(text, m =>
+            (double.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture) * 16)
+                .ToString("0.###", CultureInfo.InvariantCulture));
     }
 
     /// <summary>
@@ -132,7 +151,11 @@ internal static class MermaidSvgTheming
             return fallback;
 
         // Nothing to resolve this pass — leave the call as-is for a later pass (or forever, if
-        // it never resolves; the caller degrades to a placeholder rather than crashing).
+        // it never resolves; the caller degrades to a placeholder rather than crashing). This is
+        // the intentional degrade-to-placeholder contract: literal, unresolved `var(...)` (and,
+        // by the same path, `color-mix(...)`) text can persist in attribute values at
+        // non-declaration usage sites — SharpVectors then fails to parse that attribute and the
+        // caller's fallback placeholder takes over, rather than this method ever throwing.
         return $"var({args})";
     }
 

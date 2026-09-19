@@ -11,7 +11,7 @@ namespace mdv.Services;
 
 /// <summary>
 /// Renders a fenced code block tagged <c>mermaid</c> as a diagram (via Mermaider, then the
-/// shared <see cref="SvgRendering"/> path); any other fenced or indented code block falls
+/// shared <see cref="SvgRendering"/> path); any other fenced code block falls
 /// through to the same appearance Markdig.Wpf's own <c>CodeBlockRenderer</c> produces.
 /// </summary>
 /// <remarks>
@@ -47,9 +47,9 @@ internal sealed class MermaidBlockRenderer : WpfObjectRenderer<FencedCodeBlock>
     }
 
     /// <summary>
-    /// Reproduces Markdig.Wpf's own <c>CodeBlockRenderer.Write</c> exactly, so any fenced or
-    /// indented code block that isn't tagged <c>mermaid</c> is visually unaffected by this
-    /// renderer's presence in the pipeline.
+    /// Reproduces Markdig.Wpf's own <c>CodeBlockRenderer.Write</c> exactly, so any fenced code
+    /// block that isn't tagged <c>mermaid</c> is visually unaffected by this renderer's presence
+    /// in the pipeline.
     /// </summary>
     private static void WriteDefaultCodeBlock(WpfRenderer renderer, FencedCodeBlock obj)
     {

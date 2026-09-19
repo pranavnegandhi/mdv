@@ -16,31 +16,6 @@ public sealed class STATestCollection
 /// </summary>
 public static class STAHelper
 {
-    public static T? RunOnSTA<T>(Func<T> action)
-    {
-        T? result = default;
-        Exception? exception = null;
-        var thread = new System.Threading.Thread(() =>
-        {
-            try
-            {
-                result = action();
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-        });
-        thread.SetApartmentState(System.Threading.ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-
-        if (exception != null)
-            throw exception;
-
-        return result;
-    }
-
     public static void RunOnSTA(Action action)
     {
         Exception? exception = null;

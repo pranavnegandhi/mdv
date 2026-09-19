@@ -42,17 +42,34 @@ public sealed class MermaidSvgThemingTests
     }
 
     [Fact]
-    public void ResolveCssVariables_RealMermaidOutput_ThenSvgRenderingBuild_DoesNotThrow()
+    public void ResolveCssVariables_RemFontSize_ConvertsToPixelNumber()
     {
-        STAHelper.RunOnSTA(() =>
-        {
-            var svg = MermaidRenderer.RenderSvg("flowchart TD\n  A --> B\n");
+        const string svg = "<svg><style>--fs-m: 1rem;</style><text font-size=\"var(--fs-m)\">A</text></svg>";
 
-            var resolved = MermaidSvgTheming.ResolveCssVariables(svg);
+        var result = MermaidSvgTheming.ResolveCssVariables(svg);
 
-            var block = SvgRendering.Build(resolved);
+        Assert.Contains("font-size=\"16\"", result);
+    }
 
-            Assert.NotNull(block);
-        });
+    [Fact]
+    public void ResolveCssVariables_AccentWithNoTrailingSemicolon_IsResolved()
+    {
+        const string svg = "<svg style=\"--bg:#FFFFFF;--fg:#27272A;--accent:#3b82f6\">" +
+                            "<path fill=\"var(--accent)\" /></svg>";
+
+        var result = MermaidSvgTheming.ResolveCssVariables(svg);
+
+        Assert.Contains("fill=\"#3b82f6\"", result);
+    }
+
+    [Fact]
+    public void ResolveCssVariables_RealMermaidOutput_ResolvesFontSizeAndAccentColor()
+    {
+        var svg = MermaidRenderer.RenderSvg("flowchart TD\n  A --> B\n");
+
+        var resolved = MermaidSvgTheming.ResolveCssVariables(svg);
+
+        Assert.Contains("font-size=\"16\"", resolved);
+        Assert.Contains("#3b82f6", resolved);
     }
 }

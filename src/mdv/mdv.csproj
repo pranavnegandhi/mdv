@@ -18,8 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Exposes internal types (SvgBlock, SvgBlockParser, SvgExtension) to the test project
-         so the parse layer can be unit-tested without widening the public API. -->
+    <!-- Exposes internal types (SvgBlock, SvgBlockParser, SvgExtension, SvgRendering,
+         MermaidBlockRenderer, MermaidExtension, MermaidSvgTheming) to the test project
+         so the parse and rendering layers can be unit-tested without widening the public API. -->
     <InternalsVisibleTo Include="mdv.Tests" />
   </ItemGroup>
 
