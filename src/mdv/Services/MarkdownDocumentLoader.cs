@@ -16,10 +16,13 @@ namespace mdv.Services;
 public static class MarkdownDocumentLoader
 {
     // All supported Markdig.Wpf extensions (emphasis extras, pipe/grid tables, task lists,
-    // auto-links, etc.) plus SvgExtension, which recognizes inline <svg> at the parse layer and
-    // registers its WPF renderer. Built once and reused.
+    // auto-links, etc.) plus SvgExtension (inline <svg>) and MermaidExtension (```mermaid
+    // fences), each registering its own WPF renderer. Built once and reused.
     private static readonly MarkdownPipeline Pipeline =
-        new MarkdownPipelineBuilder().UseSupportedExtensions().Use(new SvgExtension()).Build();
+        new MarkdownPipelineBuilder().UseSupportedExtensions()
+            .Use(new SvgExtension())
+            .Use(new MermaidExtension())
+            .Build();
 
     /// <summary>
     /// Reads <paramref name="path"/> and renders it to a <see cref="FlowDocument"/>.
