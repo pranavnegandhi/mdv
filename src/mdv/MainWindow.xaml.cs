@@ -35,6 +35,9 @@ public partial class MainWindow : Window
     public static readonly RoutedUICommand AutoReloadCommand =
         new("Auto-reload", nameof(AutoReloadCommand), typeof(MainWindow));
 
+    public static readonly RoutedUICommand OpenDirectoryCommand =
+        new("Open Directory", nameof(OpenDirectoryCommand), typeof(MainWindow));
+
     public static readonly RoutedUICommand AboutCommand =
         new("About", nameof(AboutCommand), typeof(MainWindow));
 
@@ -423,17 +426,46 @@ public partial class MainWindow : Window
     // ----- Follow Claude session ----------------------------------------------
 
     /// <summary>
-    /// Enables live-follow mode (e.g. from the <c>--follow</c> launch flag). Follow mode is
-    /// launch-only: it starts here and ends only when the user opens a file (see
-    /// <see cref="StopFollowing"/>). While on, mdv watches one project's session folder
+    /// Handles the "Open Directory..." menu command: opens the folder-picker common dialog
+    /// and, on a selection, (re)starts follow mode scoped to the chosen directory. Any
+    /// directory is accepted, including one with no Claude session yet — the session folder
+    /// is created on demand and the watcher picks up the first response once Claude writes
+    /// one (see <see cref="EnableFollow"/>).
+    /// </summary>
+    private void OnOpenDirectory(object sender, ExecutedRoutedEventArgs e)
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = "Follow which project directory?",
+            Multiselect = false,
+        };
+
+        if (dialog.ShowDialog(this) == true)
+            EnableFollow(dialog.FolderName);
+    }
+
+    /// <summary>
+    /// Enables live-follow mode, either from the <c>--follow</c> launch flag or from the
+    /// "Open Directory..." menu command. Follow mode starts here and ends only when the
+    /// user opens a file (see <see cref="StopFollowing"/>) — there is no separate toggle
+    /// to turn it off. While on, mdv watches one project's session folder
     /// (<c>%LOCALAPPDATA%\mdv\sessions\&lt;slug&gt;</c>) and reloads the newest session file as
     /// each response is appended. <paramref name="projectPath"/> selects which project's
-    /// sessions to mirror; when null the current working directory is used.
+    /// sessions to mirror; when null the current working directory is used. Calling this
+    /// while already following re-targets follow mode: the current watcher is stopped and
+    /// a new one is started for the newly given project.
     /// </summary>
     public void EnableFollow(string? projectPath = null)
     {
-        if (_following)
-            return;
+        // Re-targeting: stop the current watcher first so its next tick cannot race the
+        // new one, then fall through to start fresh against the newly given project.
+        StopFollowing();
+
+        // Hide the comic-of-the-day overlay: entering follow mode from the empty/comic
+        // startup state (e.g. via "Open Directory...") must not leave it floating above
+        // the loaded session — including the "waiting…" state below, which shows no
+        // document at all until the first response arrives.
+        ComicPanel.Visibility = Visibility.Collapsed;
 
         var project = string.IsNullOrWhiteSpace(projectPath)
             ? Environment.CurrentDirectory

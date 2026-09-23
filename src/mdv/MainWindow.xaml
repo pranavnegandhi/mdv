@@ -19,6 +19,7 @@
         <CommandBinding Command="{x:Static local:MainWindow.AutoReloadCommand}" Executed="OnToggleAutoReload" />
         <CommandBinding Command="{x:Static local:MainWindow.ReloadCommand}" Executed="OnReload" CanExecute="OnCanReload" />
         <CommandBinding Command="{x:Static local:MainWindow.DistractionFreeCommand}" Executed="OnToggleDistractionFree" />
+        <CommandBinding Command="{x:Static local:MainWindow.OpenDirectoryCommand}" Executed="OnOpenDirectory" />
         <CommandBinding Command="{x:Static local:MainWindow.AboutCommand}" Executed="OnAbout" />
         <CommandBinding Command="{x:Static markdig:Commands.Hyperlink}" Executed="OnHyperlink" />
     </Window.CommandBindings>
@@ -37,6 +38,7 @@
         <Menu x:Name="MainMenu" DockPanel.Dock="Top">
             <MenuItem x:Name="FileMenu" Header="_File">
                 <MenuItem Header="_Open..." Command="ApplicationCommands.Open" InputGestureText="Ctrl+O" />
+                <MenuItem Header="Open _Directory..." Command="{x:Static local:MainWindow.OpenDirectoryCommand}" />
                 <MenuItem Header="_Close" Command="{x:Static local:MainWindow.CloseCommand}" InputGestureText="Ctrl+W" />
                 <Separator x:Name="RecentSeparator" />
                 <!-- Recent-files (MRU) menu items are inserted here at run time. -->
