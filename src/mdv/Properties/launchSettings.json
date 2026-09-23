@@ -1,11 +1,11 @@
 {
   "profiles": {
-    "Debug in Standard mode": {
-      "commandName": "Project"
-    },
     "Debug in Follow mode": {
       "commandName": "Project",
       "commandLineArgs": "--follow D:\\projects\\cyviz"
+    },
+    "Debug in Standard mode": {
+      "commandName": "Project"
     }
   }
 }
